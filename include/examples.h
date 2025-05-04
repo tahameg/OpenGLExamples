@@ -4,5 +4,6 @@
 #include "openGLExample.h"
 
 extern OpenGLExample SimpleTriangleExample;
+extern OpenGLExample ActiveTextureExample;
 
 #endif

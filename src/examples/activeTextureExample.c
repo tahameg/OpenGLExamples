@@ -2,12 +2,20 @@
 #include <GLES2/gl2ext.h>
 #include <stdio.h>
 #include "examples.h"
+#include "config.h"
 #include "utils/programUtils.h"
+#include "utils/resourceUtils.h"
 
 static const GLfloat vertices[] = {
     -0.5f, -0.5f, 0.0f,
      0.5f, -0.5f, 0.0f,
      0.0f,  0.5f, 0.0f
+};
+
+static const GLfloat texCoords[] = {
+    0.0f, 0.0f,
+    1.0f, 0.0f,
+    0.5f, 1.0f
 };
 
 static const GLchar* vertexShaderSource = 
@@ -21,7 +29,7 @@ static const GLchar* fragmentShaderSource =
     "precision mediump float;\n"
     "void main()\n"
     "{\n"
-    "    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n"
+    "    gl_FragColor = vec4(6.0, 0.2, 4.0, 1.0);\n"
     "}\n";
 
 static GLuint shaderProgram, vertexShader, fragmentShader, VBO, VAO;
@@ -36,7 +44,6 @@ void init()
         return;
     }
 
-    bIsReady = GL_TRUE;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
 
@@ -49,6 +56,33 @@ void init()
     
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    char** data;
+    unsigned int width, height, isAlpha;
+    if(!loadPNG("/textures/spiderman1.png", &width, &height, &isAlpha, &data))
+    {
+        return;
+    }
+
+    for(int i = 0; i < height; i+=6)
+    {
+        for(int j = 0; j < width; j+=6)
+        {
+            char alpha = data[i][(j*(isAlpha ? 4 : 3) - 1)];
+            putchar(alpha ? ' ' : '#');
+        }
+        putchar('\n');
+    }
+    printf("PNG is loaded: \n" 
+            "\twidth -> %d \n"
+            "\theight -> %d \n"
+            "\tisAlpha -> %s \n", width, height, isAlpha ? "true" : "false");
+    free(data);
 }
 
 static
@@ -83,9 +117,9 @@ void exit()
     bIsReady = GL_FALSE;
 }
 
-OpenGLExample SimpleTriangleExample = {
-    .name = "Simple Triangle Example",
-    .description = "A simple OpenGL example that draws a triangle.",
+OpenGLExample ActiveTextureExample = {
+    .name = "Active Texture Example",
+    .description = "An example showcasing glActiveTexture with two textures.",
     .oninit = init,
     .ontick = tick,
     .onexit = exit
