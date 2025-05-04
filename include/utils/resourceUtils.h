@@ -8,11 +8,13 @@ int loadPNG(const char* resourcePath,
             unsigned int* outWidth, 
             unsigned int* outHeight, 
             int *outHasAlpha,
-            png_bytepp* outData);
+            png_byte** outData);
 
 int loadPNGTexture(const char* resourcePath,
+    void (*configFunc)(void),
     unsigned int* outWidth, 
-    unsigned int* outHeight, 
+    unsigned int* outHeight,
+    int *outHasAlpha,
     GLuint* outTextureId);
 
 #endif

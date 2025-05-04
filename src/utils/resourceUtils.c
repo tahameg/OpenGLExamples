@@ -4,12 +4,13 @@
 #include <string.h>
 #include <png.h>
 #include "config.h"
+#include "utils/resourceUtils.h"
 
 int loadPNG(const char* filePath,
             unsigned int* outWidth, 
             unsigned int* outHeight,
             int* outHasAlpha,
-            png_bytepp* outData)
+            png_byte** outData)
 {
     png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (!png)
@@ -95,32 +96,36 @@ int loadPNG(const char* filePath,
     }
 
     png_read_image(png, row_pointers);
+    png_byte* final_data = (png_byte*)malloc(height * row_byte_count);
 
-    /*
-    for (int i = 0; i < (height / 2); i++) {
+    for (int i = 0; i < height; i++) {
         // note that png is ordered top to
         // bottom, but OpenGL expect it bottom to top
         // so the order or swapped
-        png_byte* temp = row_pointers[i];
-        row_pointers[i] = row_pointers[height - i - 1];
-        row_pointers[height - i - 1] = temp;
+        memcpy(final_data + (row_byte_count * (height-1-i)), row_pointers[i], row_byte_count);
     }
-    */
 
-    *outData = row_pointers;
+    for(int i = 0; i < height; i++)
+    {
+        free(row_pointers[i]);
+    }
+    free(row_pointers);
+
+    *outData = final_data;
     png_destroy_read_struct(&png, &info, NULL);
     fclose(file);
     return 1;
 }
 
 int loadPNGTexture(const char* filePath,
+                   void (*configFunc)(void),
                    unsigned int* outWidth, 
                    unsigned int* outHeight,
+                   int* outHasAlpha,
                    GLuint* outTextureId)
 {
-    png_bytepp imageData;
-    int hasAlpha = 0;
-    if(!loadPNG(filePath, outWidth, outHeight, &hasAlpha, &imageData))
+    png_byte* imageData;
+    if(!loadPNG(filePath, outWidth, outHeight, outHasAlpha, &imageData))
     {
         return 0;
     }
@@ -128,17 +133,23 @@ int loadPNGTexture(const char* filePath,
     glGenTextures(1, outTextureId);
     glBindTexture(GL_TEXTURE_2D, *outTextureId);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, *outWidth, *outHeight, 0, GL_RGBA,
-                GL_UNSIGNED_BYTE, imageData);
-    
-    
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        GL_UNSIGNED_BYTE, imageData);
 
-    for(int i = 0; i < *outHeight; i++)
+    if(configFunc != NULL)
     {
-        free(imageData[i]);
+        configFunc();
     }
-    free(imageData);
+    else
+    {
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);	
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    }
 
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    free(imageData);
     return 1;
 }
