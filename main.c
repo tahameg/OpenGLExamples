@@ -7,7 +7,6 @@
 
 static GLFWwindow* window;
 static double lastTime = 0.0;
-
 static OpenGLExample* currentExample;
 
 static
@@ -34,7 +33,7 @@ int oninit()
     
     glfwMakeContextCurrent(window);
 
-    currentExample = &SimpleTriangleExample;
+    currentExample = &ActiveTextureExample;
     currentExample->window = window;
     currentExample->oninit();
 
@@ -50,7 +49,6 @@ void ontick(double deltaTime)
     }
     currentExample->ontick(deltaTime);
 }
-
 
 static
 void onexit()

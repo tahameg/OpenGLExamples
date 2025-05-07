@@ -2,6 +2,7 @@
 #include <GLES2/gl2ext.h>
 #include <stdio.h>
 #include "examples.h"
+#include "utils/programUtils.h"
 
 static const GLfloat vertices[] = {
     -0.5f, -0.5f, 0.0f,
@@ -28,51 +29,9 @@ static GLuint shaderProgram, vertexShader, fragmentShader, VBO, VAO;
 static GLint bIsReady = GL_FALSE; 
 
 static
-int linkProgram()
-{
-    GLint success;
-
-    // Create and compile the vertex shader
-    vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    glCompileShader(vertexShader);
-
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        fprintf(stderr, "Vertex Shader Compilation Error.\n");
-        return 0;
-    }
-
-    // Create and compile the fragment shader
-    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        fprintf(stderr, "Fragment Shader Compilation Error.\n");
-        return 0;
-    }
-
-    // Create the shader program
-    shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if (!success) {
-        fprintf(stderr, "Shader Program Linking Error.\n");
-        return 0;
-    }
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-    return 1;
-}
-
-static
 void init()
 {
-    if(!linkProgram())
+    if(!linkProgram(vertexShaderSource, fragmentShaderSource, &shaderProgram))
     {
         return;
     }
@@ -100,7 +59,7 @@ void tick(double deltaTime)
         return;
     }
 
-    glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(shaderProgram);

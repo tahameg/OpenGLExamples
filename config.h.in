@@ -1,0 +1,2 @@
+#define RESOURCES_DIR "@resources_dir@"
+#define PROG_VERSION "@version@"
